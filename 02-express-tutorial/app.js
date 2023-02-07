@@ -2,7 +2,12 @@ const express = require("express");
 const app = express();
 const { products, people } = require("./data");
 app.get("/", (req, res) => {
-  res.send('<a href="/api/products">products</a>');
+  const { image } = products[0];
+  res.send(`<a href="${ image }">products</a>`);
+});
+
+app.get("/showPicture", (req, res) => {
+  res.links({ next: image });
 });
 
 app.get("/api/products", (req, res) => {
@@ -30,6 +35,7 @@ app.get("/api/people", (req, res) => {
 });
 
 // app.get("/api/people/:userID", (req, res) => {
+//   console.log(req.params);
 //   const { userID } = req.params;
 //   const chosenUser = people.find((user) => user.id === +userID);
 //   res.json(chosenUser);
@@ -39,13 +45,14 @@ app.get("/api/people/query", (req, res) => {
   console.log(req.query);
   const { idLessThan, nameIsNot } = req.query;
   let sortedUsers = people;
-  if (idLessThan && nameIsNot) {
-    sortedUsers = sortedUsers.filter(
-      (user) => user.id < idLessThan && user.name != nameIsNot
-    );
+  if (idLessThan) {
+    sortedUsers = sortedUsers.filter((user) => user.id < +idLessThan);
   }
-  console.log(sortedUsers);
-  res.json(sortedUsers);
+  if (nameIsNot) {
+    sortedUsers = sortedUsers.filter((user) => user.name != nameIsNot);
+  }
+  return res.status(200).json(sortedUsers);
+  // return res.status(400).send("<h1>WRONG QUERY DUDE</h1>");
 });
 
 app.listen(5000, () => {
