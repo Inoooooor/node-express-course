@@ -1,62 +1,59 @@
 const express = require("express");
 const app = express();
-const { products, people } = require("./data");
-app.get("/", (req, res) => {
-  const { image } = products[0];
-  res.send(`<a href="${ image }">products</a>`);
-});
+const port = process.env.PORT || 5000;
+let { people } = require("./data");
 
-app.get("/showPicture", (req, res) => {
-  res.links({ next: image });
-});
+app.use(express.static("./methods-public"));
 
-app.get("/api/products", (req, res) => {
-  const newProducts = products.map((item) => {
-    const { id, name, image } = item;
-    return { id, name, image };
-  });
-  res.json(newProducts);
-});
+app.use(express.urlencoded({ extended: false }));
 
-app.get("/api/products/:productID", (req, res) => {
-  const { productID } = req.params;
-  const chosenProduct = products.find((item) => item.id === +productID);
-  if (!chosenProduct) return res.status(404).send("<h1>YOU MISSED</h1>");
-  res.json(chosenProduct);
-});
-
-app.get("/api/v1/query", (req, res) => {
-  console.log(req.query);
-  res.send("<h1>QUERIES</h1>");
+app.use(express.json());
+app.post("/login", (req, res) => {
+  console.log(req);
+  const { name } = req.body;
+  if (name) return res.status(200).send(`<h1>HELLO ${name}</h1>`);
+  res.status(401).send("<h1>gotcha</h1>");
 });
 
 app.get("/api/people", (req, res) => {
-  res.json(people);
+  res.status(200).json({ success: true, data: people });
 });
 
-// app.get("/api/people/:userID", (req, res) => {
-//   console.log(req.params);
-//   const { userID } = req.params;
-//   const chosenUser = people.find((user) => user.id === +userID);
-//   res.json(chosenUser);
-// });
-
-app.get("/api/people/query", (req, res) => {
-  console.log(req.query);
-  const { idLessThan, nameIsNot } = req.query;
-  let sortedUsers = people;
-  if (idLessThan) {
-    sortedUsers = sortedUsers.filter((user) => user.id < +idLessThan);
-  }
-  if (nameIsNot) {
-    sortedUsers = sortedUsers.filter((user) => user.name != nameIsNot);
-  }
-  return res.status(200).json(sortedUsers);
-  // return res.status(400).send("<h1>WRONG QUERY DUDE</h1>");
+app.post("/api/people", (req, res) => {
+  const { name } = req.body;
+  console.log(name);
+  if (!name) return res.status(400).json({ success: false, msg: "try better" });
+  res.status(201).send({ success: true, person: name });
 });
 
-const port = process.env.PORT || 5000
+app.put("/api/people/:id", (req, res) => {
+  const { name } = req.body;
+  const { id } = req.params;
+  if (!id) return res.status(404).send("no such person");
+  const chosenPerson = people.find((person) => {
+    person.id === +id;
+  });
+  const updatedPeople = people.map((person) => {
+    if (person.id === +id) {
+      person.name = name;
+    }
+    return person;
+  });
+  res.status(200).json({ success: true, data: updatedPeople });
+});
 
+app.delete("/api/people/:id", (req, res) => {
+  const { id } = req.params;
+  console.log(id);
+  const chosenPerson = people.find((person) => person.id === +id);
+  console.log(chosenPerson);
+  if (!chosenPerson)
+    return res
+      .status(404)
+      .json({ success: false, msg: `No person with id: ${+id} to delete` });
+      const updatedPeople = people.filter((person) => person.id !== +id);
+      return res.status(200).json({ success: true, data: updatedPeople });
+});
 app.listen(port, () => {
   console.log(`Server is listening on port ${port}`);
 });
